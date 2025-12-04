@@ -1,7 +1,7 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { User } from '../types';
 
 const data = [
   { name: 'Seg', uv: 40 },
@@ -30,12 +30,26 @@ const StatCard = ({ title, value, icon, colorClass }: any) => (
 );
 
 export default function Dashboard() {
+  const [userName, setUserName] = useState('Usuário');
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const user: User = JSON.parse(storedUser);
+        setUserName(user.name.split(' ')[0]); // Get first name
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
+
   return (
     <div className="flex flex-col gap-6 lg:gap-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Painel Administrativo</h2>
-          <p className="text-slate-500 mt-1 text-sm md:text-base">Bem-vinda de volta, Ana! Aqui está o resumo de hoje.</p>
+          <p className="text-slate-500 mt-1 text-sm md:text-base">Bem-vindo(a) de volta, {userName}! Aqui está o resumo de hoje.</p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
            <button className="flex-1 md:flex-none bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 justify-center">Hoje</button>

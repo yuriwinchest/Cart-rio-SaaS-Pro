@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, useLocation, Navigate, Link } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Atendimentos from './pages/Atendimentos';
@@ -8,6 +8,7 @@ import Servicos from './pages/Servicos';
 import Usuarios from './pages/Usuarios';
 import Login from './pages/Login';
 import Cadastro from './pages/Cadastro';
+import { User } from './types';
 
 const SidebarItem = ({ to, icon, label, active, onClick }: { to: string; icon: string; label: string; active: boolean; onClick?: () => void }) => (
   <Link
@@ -28,9 +29,26 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const path = location.pathname;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => setIsSidebarOpen(false);
+
+  useEffect(() => {
+    // Load user from local storage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setCurrentUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Error parsing user from local storage", e);
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+  };
 
   return (
     <div className="flex h-screen w-full bg-[#f6f6f8]">
@@ -82,10 +100,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <div className="flex items-center gap-3">
              <div className="size-9 rounded-full bg-gray-200 bg-[url('https://i.pravatar.cc/150?u=a042581f4e29026024d')] bg-cover bg-center shrink-0"></div>
              <div className="flex-1 min-w-0">
-               <p className="text-sm font-medium text-slate-900 truncate">Ana Rodrigues</p>
-               <p className="text-xs text-slate-500 truncate">Administradora</p>
+               <p className="text-sm font-medium text-slate-900 truncate">{currentUser?.name || 'Usuário'}</p>
+               <p className="text-xs text-slate-500 truncate">{currentUser?.role || 'Visitante'}</p>
              </div>
-             <Link to="/login" className="text-slate-400 hover:text-red-500">
+             <Link to="/login" onClick={handleLogout} className="text-slate-400 hover:text-red-500" title="Sair">
                <span className="material-symbols-outlined">logout</span>
              </Link>
           </div>
