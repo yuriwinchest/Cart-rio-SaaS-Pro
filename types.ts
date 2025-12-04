@@ -5,7 +5,7 @@ export interface User {
   email: string;
   role: 'Administrador' | 'Atendente' | 'Financeiro';
   status: 'Ativo' | 'Inativo';
-  createdAt: string;
+  createdAt?: string; // Mapped from created_at
 }
 
 export interface Document {
@@ -13,7 +13,7 @@ export interface Document {
   name: string;
   client: string;
   service: string;
-  uploadDate: string;
+  uploadDate?: string; // Mapped from created_at
   status: 'Concluído' | 'Pendente' | 'Processando';
   type: 'pdf' | 'docx' | 'jpg';
   size?: string;
@@ -22,10 +22,10 @@ export interface Document {
 
 export interface Transaction {
   id: string;
-  time: string;
+  time?: string; // Mapped from created_at
   description: string;
   type: 'Receita' | 'Despesa';
-  method: 'PIX' | 'Boleto' | 'Dinheiro' | 'Cartão' | 'Cartão de Débito';
+  method: string;
   amount: number;
   notes?: string;
   items?: { description: string; quantity: number; unitPrice: number }[];
@@ -34,9 +34,9 @@ export interface Transaction {
 export interface Service {
   id: string;
   name: string;
-  attribution: 'Tabelionato de Notas' | 'Registro Civil' | 'Registro de Imóveis';
+  attribution: string;
   model: string;
-  numbering: 'Automática' | 'Manual';
+  numbering: string;
   status: 'Ativo' | 'Inativo';
 }
 

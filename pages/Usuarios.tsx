@@ -1,14 +1,32 @@
-import React from 'react';
-import { User } from '../types';
 
-const users: User[] = [
-  { id: '1', name: 'Ana Clara Souza', email: 'ana.souza@cartorio.com.br', role: 'Administrador', status: 'Ativo', createdAt: '15/03/2023' },
-  { id: '2', name: 'Bruno Costa Oliveira', email: 'bruno.costa@cartorio.com.br', role: 'Atendente', status: 'Ativo', createdAt: '22/05/2023' },
-  { id: '3', name: 'Carlos Eduardo Pereira', email: 'carlos.pereira@cartorio.com.br', role: 'Financeiro', status: 'Inativo', createdAt: '10/01/2024' },
-  { id: '4', name: 'Daniela Ferreira Lima', email: 'daniela.lima@cartorio.com.br', role: 'Atendente', status: 'Ativo', createdAt: '08/08/2023' },
-];
+import React, { useState, useEffect } from 'react';
+import { User } from '../types';
+import { supabase } from '../supabaseClient';
 
 export default function Usuarios() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.from('app_users').select('*');
+      if (!error && data) {
+        const mappedUsers: User[] = data.map((u: any) => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          status: u.status,
+          createdAt: new Date(u.created_at).toLocaleDateString('pt-BR')
+        }));
+        setUsers(mappedUsers);
+      }
+      setLoading(false);
+    };
+    fetchUsers();
+  }, []);
+
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
@@ -51,6 +69,9 @@ export default function Usuarios() {
          </div>
 
          <div className="overflow-x-auto">
+            {loading ? (
+                <div className="p-8 text-center text-slate-500">Carregando usuários...</div>
+            ) : (
             <table className="w-full text-left text-sm whitespace-nowrap">
                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase text-xs tracking-wider">
                   <tr>
@@ -89,17 +110,7 @@ export default function Usuarios() {
                   ))}
                </tbody>
             </table>
-         </div>
-
-         <div className="p-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center bg-slate-50/50 gap-4">
-            <span className="text-xs text-slate-500 text-center sm:text-left">Mostrando <span className="font-bold text-slate-900">1-4</span> de <span className="font-bold text-slate-900">10</span></span>
-            <div className="flex gap-1">
-               <button className="p-2 border border-slate-200 bg-white rounded hover:bg-slate-50 disabled:opacity-50"><span className="material-symbols-outlined text-sm">chevron_left</span></button>
-               <button className="w-8 h-8 flex items-center justify-center border border-primary bg-primary/10 text-primary font-bold rounded text-xs">1</button>
-               <button className="w-8 h-8 flex items-center justify-center border border-slate-200 bg-white hover:bg-slate-50 rounded text-xs">2</button>
-               <button className="w-8 h-8 flex items-center justify-center border border-slate-200 bg-white hover:bg-slate-50 rounded text-xs">3</button>
-               <button className="p-2 border border-slate-200 bg-white rounded hover:bg-slate-50"><span className="material-symbols-outlined text-sm">chevron_right</span></button>
-            </div>
+            )}
          </div>
       </div>
     </div>

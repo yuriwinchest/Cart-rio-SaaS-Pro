@@ -1,21 +1,38 @@
-import React from 'react';
-import { Service } from '../types';
 
-const services: Service[] = [
-  { id: '1', name: 'Procuração Pública', attribution: 'Tabelionato de Notas', model: 'Modelo Procuração v2', numbering: 'Automática', status: 'Ativo' },
-  { id: '2', name: 'Escritura de Compra e Venda', attribution: 'Tabelionato de Notas', model: 'Escritura Padrão', numbering: 'Manual', status: 'Ativo' },
-  { id: '3', name: 'Registro de Nascimento', attribution: 'Registro Civil', model: 'Certidão Nascimento 2024', numbering: 'Automática', status: 'Ativo' },
-  { id: '4', name: 'Matrícula de Imóvel', attribution: 'Registro de Imóveis', model: 'Matrícula Imobiliária v1.3', numbering: 'Automática', status: 'Inativo' },
-];
+import React, { useState, useEffect } from 'react';
+import { Service } from '../types';
+import { supabase } from '../supabaseClient';
 
 export default function Servicos() {
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.from('services').select('*');
+      if (!error && data) {
+        const mappedServices: Service[] = data.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          attribution: s.attribution,
+          model: s.model,
+          numbering: s.numbering,
+          status: s.status
+        }));
+        setServices(mappedServices);
+      }
+      setLoading(false);
+    };
+    fetchServices();
+  }, []);
+
   return (
     <div className="flex flex-col lg:flex-row h-full gap-6">
-       {/* Filters Sidebar - Responsive */}
+       {/* Filters Sidebar */}
        <div className="w-full lg:w-64 flex-shrink-0">
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 hidden lg:block">Atribuições</h3>
           
-          {/* Mobile dropdown / Desktop list */}
           <div className="lg:space-y-1 grid grid-cols-2 gap-2 lg:block">
              <button className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium">
                 <span className="material-symbols-outlined text-lg fill">description</span> <span className="truncate">Tabelionato</span>
@@ -64,6 +81,9 @@ export default function Servicos() {
              </div>
 
              <div className="overflow-x-auto">
+                {loading ? (
+                   <div className="p-8 text-center text-slate-500">Carregando serviços...</div>
+                ) : (
                 <table className="w-full text-left text-sm whitespace-nowrap">
                    <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
                       <tr>
@@ -102,6 +122,7 @@ export default function Servicos() {
                       ))}
                    </tbody>
                 </table>
+                )}
              </div>
           </div>
        </div>

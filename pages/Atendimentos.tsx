@@ -1,13 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { QueueItem } from '../types';
-
-const initialQueueData: QueueItem[] = [
-  { id: '01', name: 'Ana Clara Souza', service: 'Reconhecimento de Firma', ticketNumber: '01', waitTime: '12:34', status: 'Em Atendimento', desk: 'Guichê 03' },
-  { id: '02', name: 'Bruno Gomes', service: 'Autenticação de Cópia', ticketNumber: '02', waitTime: '08:12', status: 'Aguardando' },
-  { id: '03', name: 'Carlos Eduardo', service: 'Procuração Pública', ticketNumber: '03', waitTime: '05:45', status: 'Remoto' },
-  { id: '04', name: 'Daniela Martins', service: 'Escritura Pública', ticketNumber: '04', waitTime: '02:19', status: 'Aguardando' },
-];
+import { supabase } from '../supabaseClient';
 
 const availableServices = [
   'Reconhecimento de Firma',
@@ -77,53 +72,99 @@ const QueueCard: React.FC<{ item: QueueItem }> = ({ item }) => {
 
 export default function Atendimentos() {
   const location = useLocation();
-  const [queue, setQueue] = useState<QueueItem[]>(initialQueueData);
+  const [queue, setQueue] = useState<QueueItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [serviceFilter, setServiceFilter] = useState('Todos');
-  
-  // Check for navigation state to open modal automatically
-  useEffect(() => {
-    if (location.state && (location.state as any).openModal) {
-      setIsModalOpen(true);
-      // Clean up state (optional, depends on router behavior preference)
-      window.history.replaceState({}, document.title);
-    }
-  }, [location]);
+  const [loading, setLoading] = useState(true);
   
   // Form State
   const [clientName, setClientName] = useState('');
   const [selectedService, setSelectedService] = useState(availableServices[0]);
   const [isPriority, setIsPriority] = useState(false);
 
-  const filteredQueue = queue.filter(item => 
-    serviceFilter === 'Todos' || item.service === serviceFilter
-  );
+  useEffect(() => {
+    fetchQueue();
+  }, []);
 
-  const handleAddNew = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (location.state && (location.state as any).openModal) {
+      setIsModalOpen(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
+  const fetchQueue = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('queue_items')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      if (data) {
+        // Map database snake_case to typescript camelCase
+        const mappedData: QueueItem[] = data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          service: item.service,
+          ticketNumber: item.ticket_number,
+          waitTime: item.wait_time,
+          status: item.status,
+          desk: item.desk
+        }));
+        setQueue(mappedData);
+      }
+    } catch (error) {
+      console.error('Error fetching queue:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddNew = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clientName) return;
 
     const nextNumber = (queue.length + 1).toString().padStart(2, '0');
     
-    const newItem: QueueItem = {
-      id: Date.now().toString(),
-      name: clientName,
-      service: selectedService,
-      ticketNumber: nextNumber,
-      waitTime: '00:00',
-      status: 'Aguardando'
-    };
+    try {
+      const { data, error } = await supabase
+        .from('queue_items')
+        .insert([
+          { 
+            name: clientName,
+            service: selectedService,
+            ticket_number: nextNumber,
+            status: 'Aguardando',
+            wait_time: '00:00'
+          }
+        ])
+        .select();
 
-    // If priority, add to the beginning of the "Aguardando" list (simplified logic)
-    // For now just appending
-    setQueue([...queue, newItem]);
-    
-    // Reset and close
-    setClientName('');
-    setIsPriority(false);
-    setSelectedService(availableServices[0]);
-    setIsModalOpen(false);
+      if (error) throw error;
+
+      if (data) {
+        // Refresh queue
+        fetchQueue();
+      }
+      
+      // Reset and close
+      setClientName('');
+      setIsPriority(false);
+      setSelectedService(availableServices[0]);
+      setIsModalOpen(false);
+
+    } catch (error) {
+      console.error('Error adding ticket:', error);
+      alert('Erro ao criar atendimento.');
+    }
   };
+
+  const filteredQueue = queue.filter(item => 
+    serviceFilter === 'Todos' || item.service === serviceFilter
+  );
 
   return (
     <div className="flex flex-col h-full relative">
@@ -169,24 +210,30 @@ export default function Atendimentos() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {/* Render Cards */}
-        {filteredQueue.map(item => (
-          <QueueCard key={item.id} item={item} />
-        ))}
-
-        {/* Add New Card Button */}
-        <div 
-          onClick={() => setIsModalOpen(true)}
-          className="flex flex-col items-center justify-center bg-slate-50 rounded-xl border-2 border-dashed border-slate-300 min-h-[220px] p-6 text-center hover:bg-white hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group"
-        >
-           <div className="size-12 rounded-full bg-white border border-slate-200 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-             <span className="material-symbols-outlined text-slate-400 group-hover:text-primary">add</span>
-           </div>
-           <p className="font-bold text-slate-700 group-hover:text-primary transition-colors">Novo Atendimento</p>
-           <p className="text-sm text-slate-500 mt-1">Adicionar cliente à fila manualmente</p>
+      {loading ? (
+        <div className="flex justify-center p-12">
+          <span className="material-symbols-outlined text-4xl text-primary animate-spin">progress_activity</span>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {/* Render Cards */}
+          {filteredQueue.map(item => (
+            <QueueCard key={item.id} item={item} />
+          ))}
+
+          {/* Add New Card Button */}
+          <div 
+            onClick={() => setIsModalOpen(true)}
+            className="flex flex-col items-center justify-center bg-slate-50 rounded-xl border-2 border-dashed border-slate-300 min-h-[220px] p-6 text-center hover:bg-white hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group"
+          >
+             <div className="size-12 rounded-full bg-white border border-slate-200 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+               <span className="material-symbols-outlined text-slate-400 group-hover:text-primary">add</span>
+             </div>
+             <p className="font-bold text-slate-700 group-hover:text-primary transition-colors">Novo Atendimento</p>
+             <p className="text-sm text-slate-500 mt-1">Adicionar cliente à fila manualmente</p>
+          </div>
+        </div>
+      )}
       
       {/* Side Section (QR Code & Notifications) */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">

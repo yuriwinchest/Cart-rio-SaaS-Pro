@@ -1,70 +1,46 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Transaction } from '../types';
-
-const transactions: Transaction[] = [
-  { 
-    id: '1', 
-    time: '14:32', 
-    description: 'Reconhecimento de firma', 
-    type: 'Receita', 
-    method: 'PIX', 
-    amount: 15.50,
-    notes: 'Cliente solicitou urgência. Documento entregue no balcão.',
-    items: [
-        { description: 'Reconhecimento de Firma (Semelhança)', quantity: 1, unitPrice: 15.50 }
-    ]
-  },
-  { 
-    id: '2', 
-    time: '13:15', 
-    description: 'Pagamento conta de luz', 
-    type: 'Despesa', 
-    method: 'Boleto', 
-    amount: -350.00,
-    notes: 'Referente ao mês de Junho/2024. Instalação principal.',
-  },
-  { 
-    id: '3', 
-    time: '11:58', 
-    description: 'Autenticação de cópia (5x)', 
-    type: 'Receita', 
-    method: 'Cartão de Débito', 
-    amount: 45.00,
-    items: [
-        { description: 'Autenticação de Cópia', quantity: 5, unitPrice: 9.00 }
-    ]
-  },
-  { 
-    id: '4', 
-    time: '10:05', 
-    description: 'Compra de material de escritório', 
-    type: 'Despesa', 
-    method: 'Cartão', 
-    amount: -120.70,
-    notes: 'Papel A4, Canetas e Clips. Nota Fiscal 4599.',
-    items: [
-        { description: 'Resma Papel A4', quantity: 3, unitPrice: 25.00 },
-        { description: 'Caixa Caneta Azul', quantity: 1, unitPrice: 35.00 },
-        { description: 'Clips 2/0', quantity: 2, unitPrice: 5.35 }
-    ]
-  },
-  { 
-    id: '5', 
-    time: '09:12', 
-    description: 'Procuração pública', 
-    type: 'Receita', 
-    method: 'Dinheiro', 
-    amount: 280.00,
-    notes: 'Procuração de amplos poderes.',
-    items: [
-        { description: 'Lavratura de Procuração', quantity: 1, unitPrice: 280.00 }
-    ]
-  },
-];
+import { supabase } from '../supabaseClient';
 
 export default function Financeiro() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        const mappedData: Transaction[] = data.map((t: any) => ({
+          id: t.id,
+          time: new Date(t.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          description: t.description,
+          type: t.type,
+          method: t.method,
+          amount: t.amount,
+          notes: t.notes,
+          items: t.items
+        }));
+        setTransactions(mappedData);
+      }
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div>
@@ -102,11 +78,11 @@ export default function Financeiro() {
         </div>
         <div className="bg-white p-6 rounded-xl border border-slate-200">
            <p className="text-green-600 font-medium mb-1 text-sm">Total Entradas</p>
-           <p className="text-2xl font-bold text-slate-900">R$ 8.750,50</p>
+           <p className="text-2xl font-bold text-slate-900">R$ {transactions.filter(t => t.type === 'Receita').reduce((acc, curr) => acc + Number(curr.amount), 0).toFixed(2).replace('.', ',')}</p>
         </div>
         <div className="bg-white p-6 rounded-xl border border-slate-200">
            <p className="text-red-600 font-medium mb-1 text-sm">Total Saídas</p>
-           <p className="text-2xl font-bold text-slate-900">R$ 3.210,00</p>
+           <p className="text-2xl font-bold text-slate-900">R$ {Math.abs(transactions.filter(t => t.type === 'Despesa').reduce((acc, curr) => acc + Number(curr.amount), 0)).toFixed(2).replace('.', ',')}</p>
         </div>
         <div className="bg-primary/10 border border-primary/20 p-6 rounded-xl">
            <p className="text-primary font-bold mb-1 text-sm">Saldo Atual</p>
@@ -137,6 +113,9 @@ export default function Financeiro() {
 
         {/* Table */}
         <div className="overflow-x-auto">
+          {loading ? (
+             <div className="p-8 text-center text-slate-500">Carregando movimentações...</div>
+          ) : (
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-semibold">
                <tr>
@@ -167,7 +146,7 @@ export default function Financeiro() {
                     <td className="px-6 py-4 text-slate-600 flex items-center gap-2">
                       {t.method === 'PIX' && <span className="material-symbols-outlined text-sm">qr_code</span>}
                       {t.method === 'Boleto' && <span className="material-symbols-outlined text-sm">barcode</span>}
-                      {t.method.includes('Cartão') && <span className="material-symbols-outlined text-sm">credit_card</span>}
+                      {t.method && t.method.includes('Cartão') && <span className="material-symbols-outlined text-sm">credit_card</span>}
                       {t.method === 'Dinheiro' && <span className="material-symbols-outlined text-sm">payments</span>}
                       {t.method}
                     </td>
@@ -183,6 +162,7 @@ export default function Financeiro() {
                ))}
             </tbody>
           </table>
+          )}
         </div>
       </div>
 

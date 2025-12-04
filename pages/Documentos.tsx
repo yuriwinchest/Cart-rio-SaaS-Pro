@@ -1,66 +1,39 @@
-import React, { useState } from 'react';
-import { Document } from '../types';
 
-const initialDocs: Document[] = [
-  { 
-    id: '1', 
-    name: 'Escritura Compra e Venda.pdf', 
-    client: 'Ana Silva', 
-    service: 'Escritura', 
-    uploadDate: '15/07/2023', 
-    status: 'Concluído', 
-    type: 'pdf',
-    content: 'ESCRITURA PÚBLICA DE COMPRA E VENDA. Saibam quantos esta pública escritura virem que, aos... compareceram partes entre si justas e contratadas... objeto: imóvel residencial urbano...'
-  },
-  { 
-    id: '2', 
-    name: 'Procuracao_Joao_Santos.pdf', 
-    client: 'João Santos', 
-    service: 'Procuração', 
-    uploadDate: '14/07/2023', 
-    status: 'Concluído', 
-    type: 'pdf',
-    content: 'PROCURAÇÃO AD JUDICIA ET EXTRA. Outorgante: João Santos... Outorgado: Dr. Advogado... Poderes: amplos gerais e ilimitados para o foro em geral...'
-  },
-  { 
-    id: '3', 
-    name: 'Contrato_Social_LTDA.docx', 
-    client: 'Empresa XYZ Ltda', 
-    service: 'Contrato Social', 
-    uploadDate: '12/07/2023', 
-    status: 'Processando', 
-    type: 'docx',
-    content: 'CONTRATO SOCIAL DE CONSTITUIÇÃO DE SOCIEDADE LIMITADA. Pelo presente instrumento particular... Cláusula 1ª: A sociedade girará sob a denominação social de Empresa XYZ Ltda...'
-  },
-  { 
-    id: '4', 
-    name: 'Certidao_Nascimento.jpg', 
-    client: 'Carlos Pereira', 
-    service: 'Certidão', 
-    uploadDate: '11/07/2023', 
-    status: 'Pendente', 
-    type: 'jpg',
-    content: 'REPÚBLICA FEDERATIVA DO BRASIL. REGISTRO CIVIL DAS PESSOAS NATURAIS. Certidão de Nascimento. Nome: Carlos Pereira. Data de Nascimento: ...'
-  },
-  { 
-    id: '5', 
-    name: 'Testamento_Maria.pdf', 
-    client: 'Maria Fernandes', 
-    service: 'Testamento', 
-    uploadDate: '10/07/2023', 
-    status: 'Concluído', 
-    type: 'pdf',
-    content: 'TESTAMENTO PÚBLICO. Aos dez dias do mês de julho... compareceu a testadora Maria Fernandes... declara que este é o seu testamento e disposição de última vontade...'
-  },
-];
+import React, { useState, useEffect } from 'react';
+import { Document } from '../types';
+import { supabase } from '../supabaseClient';
 
 export default function Documentos() {
+  const [docs, setDocs] = useState<Document[]>([]);
   const [view, setView] = useState<'list' | 'grid'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Todos');
   const [typeFilter, setTypeFilter] = useState('Todos');
+  const [loading, setLoading] = useState(true);
 
-  const filteredDocs = initialDocs.filter(doc => {
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.from('documents').select('*');
+      if (!error && data) {
+        const mappedDocs: Document[] = data.map((d: any) => ({
+          id: d.id,
+          name: d.name,
+          client: d.client,
+          service: d.service,
+          uploadDate: new Date(d.created_at).toLocaleDateString('pt-BR'),
+          status: d.status,
+          type: d.type,
+          content: d.content
+        }));
+        setDocs(mappedDocs);
+      }
+      setLoading(false);
+    };
+    fetchDocuments();
+  }, []);
+
+  const filteredDocs = docs.filter(doc => {
     const term = searchTerm.toLowerCase();
     const matchesSearch = 
       doc.name.toLowerCase().includes(term) ||
@@ -74,7 +47,6 @@ export default function Documentos() {
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  // Helper to extract a snippet of text around the search term
   const getSnippet = (text: string | undefined, term: string) => {
     if (!text || !term || term.length < 2) return null;
     const index = text.toLowerCase().indexOf(term.toLowerCase());
@@ -165,7 +137,11 @@ export default function Documentos() {
 
        {/* Content */}
        <div className="flex-1 bg-white rounded-xl border border-slate-200 p-4 md:p-6 overflow-hidden flex flex-col">
-          {view === 'grid' && (
+          {loading ? (
+             <div className="flex justify-center p-12">
+               <span className="material-symbols-outlined text-4xl text-primary animate-spin">progress_activity</span>
+             </div>
+          ) : view === 'grid' ? (
              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto p-1">
                {/* Dropzone */}
                <div className="border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center p-6 text-center text-slate-400 hover:bg-slate-50 transition-colors cursor-pointer min-h-[180px]">
@@ -175,9 +151,7 @@ export default function Documentos() {
                </div>
 
                {filteredDocs.map(doc => {
-                 // Check if match is in content to show snippet
                  const contentSnippet = getSnippet(doc.content, searchTerm);
-                 
                  return (
                    <div key={doc.id} className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow group relative flex flex-col">
                       <div className="flex justify-between items-start mb-3">
@@ -189,7 +163,6 @@ export default function Documentos() {
                       <h4 className="font-bold text-slate-800 text-sm mb-1 truncate" title={doc.name}>{doc.name}</h4>
                       <p className="text-xs text-slate-500 mb-2">Modificado: {doc.uploadDate}</p>
                       
-                      {/* OCR Snippet - Show if search term matches content */}
                       {contentSnippet && (
                         <div className="mb-4 p-2 bg-yellow-50 border border-yellow-100 rounded text-[11px] text-slate-600 italic leading-snug">
                            "{contentSnippet}"
@@ -206,16 +179,8 @@ export default function Documentos() {
                    </div>
                  );
                })}
-               
-               {filteredDocs.length === 0 && (
-                 <div className="col-span-full py-10 text-center text-slate-500">
-                    Nenhum documento encontrado.
-                 </div>
-               )}
              </div>
-          )}
-
-          {view === 'list' && (
+          ) : (
             <div className="overflow-x-auto">
                <table className="w-full text-left text-sm whitespace-nowrap">
                   <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
@@ -239,7 +204,6 @@ export default function Documentos() {
                               {doc.type === 'jpg' && <span className="material-symbols-outlined text-green-500 text-lg">image</span>}
                               <div className="flex flex-col">
                                  <span>{doc.name}</span>
-                                 {/* Optional small snippet in list view */}
                                  {getSnippet(doc.content, searchTerm) && (
                                     <span className="text-[10px] text-slate-400 italic max-w-xs truncate">
                                        "...{getSnippet(doc.content, searchTerm)}..."
@@ -265,13 +229,6 @@ export default function Documentos() {
                            </td>
                         </tr>
                      ))}
-                     {filteredDocs.length === 0 && (
-                        <tr>
-                           <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
-                              Nenhum documento encontrado.
-                           </td>
-                        </tr>
-                     )}
                   </tbody>
                </table>
             </div>
