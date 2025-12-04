@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   name: string;
@@ -16,6 +17,7 @@ export interface Document {
   status: 'Concluído' | 'Pendente' | 'Processando';
   type: 'pdf' | 'docx' | 'jpg';
   size?: string;
+  content?: string;
 }
 
 export interface Transaction {

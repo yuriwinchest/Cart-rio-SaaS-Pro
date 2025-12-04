@@ -1,16 +1,73 @@
+
 import React, { useState } from 'react';
 import { Document } from '../types';
 
-const docs: Document[] = [
-  { id: '1', name: 'Escritura Compra e Venda.pdf', client: 'Ana Silva', service: 'Escritura', uploadDate: '15/07/2023', status: 'Concluído', type: 'pdf' },
-  { id: '2', name: 'Procuracao_Joao_Santos.pdf', client: 'João Santos', service: 'Procuração', uploadDate: '14/07/2023', status: 'Concluído', type: 'pdf' },
-  { id: '3', name: 'Contrato_Social_LTDA.docx', client: 'Empresa XYZ Ltda', service: 'Contrato Social', uploadDate: '12/07/2023', status: 'Processando', type: 'docx' },
-  { id: '4', name: 'Certidao_Nascimento.jpg', client: 'Carlos Pereira', service: 'Certidão', uploadDate: '11/07/2023', status: 'Pendente', type: 'jpg' },
-  { id: '5', name: 'Testamento_Maria.pdf', client: 'Maria Fernandes', service: 'Testamento', uploadDate: '10/07/2023', status: 'Concluído', type: 'pdf' },
+const initialDocs: Document[] = [
+  { 
+    id: '1', 
+    name: 'Escritura Compra e Venda.pdf', 
+    client: 'Ana Silva', 
+    service: 'Escritura', 
+    uploadDate: '15/07/2023', 
+    status: 'Concluído', 
+    type: 'pdf',
+    content: 'ESCRITURA PÚBLICA DE COMPRA E VENDA. Saibam quantos esta pública escritura virem que, aos... compareceram partes entre si justas e contratadas... objeto: imóvel residencial urbano...'
+  },
+  { 
+    id: '2', 
+    name: 'Procuracao_Joao_Santos.pdf', 
+    client: 'João Santos', 
+    service: 'Procuração', 
+    uploadDate: '14/07/2023', 
+    status: 'Concluído', 
+    type: 'pdf',
+    content: 'PROCURAÇÃO AD JUDICIA ET EXTRA. Outorgante: João Santos... Outorgado: Dr. Advogado... Poderes: amplos gerais e ilimitados para o foro em geral...'
+  },
+  { 
+    id: '3', 
+    name: 'Contrato_Social_LTDA.docx', 
+    client: 'Empresa XYZ Ltda', 
+    service: 'Contrato Social', 
+    uploadDate: '12/07/2023', 
+    status: 'Processando', 
+    type: 'docx',
+    content: 'CONTRATO SOCIAL DE CONSTITUIÇÃO DE SOCIEDADE LIMITADA. Pelo presente instrumento particular... Cláusula 1ª: A sociedade girará sob a denominação social de Empresa XYZ Ltda...'
+  },
+  { 
+    id: '4', 
+    name: 'Certidao_Nascimento.jpg', 
+    client: 'Carlos Pereira', 
+    service: 'Certidão', 
+    uploadDate: '11/07/2023', 
+    status: 'Pendente', 
+    type: 'jpg',
+    content: 'REPÚBLICA FEDERATIVA DO BRASIL. REGISTRO CIVIL DAS PESSOAS NATURAIS. Certidão de Nascimento. Nome: Carlos Pereira. Data de Nascimento: ...'
+  },
+  { 
+    id: '5', 
+    name: 'Testamento_Maria.pdf', 
+    client: 'Maria Fernandes', 
+    service: 'Testamento', 
+    uploadDate: '10/07/2023', 
+    status: 'Concluído', 
+    type: 'pdf',
+    content: 'TESTAMENTO PÚBLICO. Aos dez dias do mês de julho... compareceu a testadora Maria Fernandes... declara que este é o seu testamento e disposição de última vontade...'
+  },
 ];
 
 export default function Documentos() {
   const [view, setView] = useState<'list' | 'grid'>('grid');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredDocs = initialDocs.filter(doc => {
+    const term = searchTerm.toLowerCase();
+    return (
+      doc.name.toLowerCase().includes(term) ||
+      doc.client.toLowerCase().includes(term) ||
+      doc.service.toLowerCase().includes(term) ||
+      (doc.content && doc.content.toLowerCase().includes(term))
+    );
+  });
 
   return (
     <div className="h-full flex flex-col">
@@ -33,7 +90,13 @@ export default function Documentos() {
        <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-             <input type="text" placeholder="Busca textual (OCR) por nome ou conteúdo..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-transparent bg-white shadow-sm focus:ring-2 focus:ring-primary/20 outline-none text-sm" />
+             <input 
+                type="text" 
+                placeholder="Busca textual (OCR) por nome ou conteúdo..." 
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-transparent bg-white shadow-sm focus:ring-2 focus:ring-primary/20 outline-none text-sm" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+             />
           </div>
           <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
              <button 
@@ -70,7 +133,7 @@ export default function Documentos() {
                   <p className="text-xs mt-1">PDF, JPG, DOCX (Max 50MB)</p>
                </div>
 
-               {docs.map(doc => (
+               {filteredDocs.map(doc => (
                  <div key={doc.id} className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow group relative flex flex-col">
                     <div className="flex justify-between items-start mb-3">
                        {doc.type === 'pdf' && <span className="material-symbols-outlined text-red-500 text-3xl">picture_as_pdf</span>}
@@ -90,6 +153,12 @@ export default function Documentos() {
                     </div>
                  </div>
                ))}
+               
+               {filteredDocs.length === 0 && (
+                 <div className="col-span-full py-10 text-center text-slate-500">
+                    Nenhum documento encontrado.
+                 </div>
+               )}
              </div>
           )}
 
@@ -108,7 +177,7 @@ export default function Documentos() {
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                     {docs.map(doc => (
+                     {filteredDocs.map(doc => (
                         <tr key={doc.id} className="hover:bg-slate-50">
                            <td className="px-4 py-3"><input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary" /></td>
                            <td className="px-4 py-3 font-medium text-slate-900 flex items-center gap-2">
@@ -135,6 +204,13 @@ export default function Documentos() {
                            </td>
                         </tr>
                      ))}
+                     {filteredDocs.length === 0 && (
+                        <tr>
+                           <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                              Nenhum documento encontrado.
+                           </td>
+                        </tr>
+                     )}
                   </tbody>
                </table>
             </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 
 const data = [
@@ -37,9 +38,13 @@ export default function Dashboard() {
         </div>
         <div className="flex gap-2">
            <button className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50">Hoje</button>
-           <button className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 flex items-center gap-2">
+           <Link 
+             to="/atendimentos" 
+             state={{ openModal: true }}
+             className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 flex items-center gap-2"
+           >
              <span className="material-symbols-outlined text-lg">add</span> Novo Atendimento
-           </button>
+           </Link>
         </div>
       </div>
 
