@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
@@ -10,6 +11,8 @@ export default function Cadastro() {
     password: '',
     confirmPassword: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -118,28 +121,50 @@ export default function Cadastro() {
             
             <div className="flex flex-col gap-1.5">
                <label className="text-sm font-semibold text-slate-700">Senha</label>
-               <input 
-                  type="password" 
-                  name="password"
-                  required
-                  placeholder="Crie uma senha" 
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-               />
+               <div className="relative">
+                 <input 
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    required
+                    placeholder="Crie uma senha" 
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all pr-10"
+                 />
+                 <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                 >
+                    <span className="material-symbols-outlined text-xl">
+                      {showPassword ? 'visibility_off' : 'visibility'}
+                    </span>
+                 </button>
+               </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
                <label className="text-sm font-semibold text-slate-700">Confirmar Senha</label>
-               <input 
-                  type="password" 
-                  name="confirmPassword"
-                  required
-                  placeholder="Repita a senha" 
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-               />
+               <div className="relative">
+                 <input 
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    required
+                    placeholder="Repita a senha" 
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all pr-10"
+                 />
+                 <button 
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                 >
+                    <span className="material-symbols-outlined text-xl">
+                      {showConfirmPassword ? 'visibility_off' : 'visibility'}
+                    </span>
+                 </button>
+               </div>
             </div>
 
             {error && (

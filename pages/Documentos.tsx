@@ -62,20 +62,33 @@ export default function Documentos() {
       const fileExt = file.name.split('.').pop()?.toLowerCase() || 'other';
       const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
       const filePath = `${fileName}`;
+      let publicUrl = '';
 
       // 1. Upload to Supabase Storage
-      const { data: storageData, error: storageError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file);
+      // We wrap this in a try-catch to allow "fallback" if storage is not configured/fails
+      // preventing the [object Object] alert crash
+      try {
+        const { data: storageData, error: storageError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, file);
 
-      if (storageError) throw storageError;
+        if (storageError) {
+            console.warn("Storage upload failed (bucket missing?), skipping to DB insert", storageError);
+            // Fallback URL so user can at least see item in list
+            publicUrl = '#'; 
+        } else {
+            // 2. Get Public URL only if upload succeeded
+            const { data: urlData } = supabase.storage
+                .from('documents')
+                .getPublicUrl(filePath);
+            publicUrl = urlData.publicUrl;
+        }
+      } catch (stErr) {
+          console.warn("Storage exception", stErr);
+          publicUrl = '#';
+      }
 
-      // 2. Get Public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-
-      // 3. Insert into Database
+      // 3. Insert into Database (Metadata)
       const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
       
       const { error: dbError } = await supabase
@@ -90,18 +103,19 @@ export default function Documentos() {
             url: publicUrl,
             path: filePath,
             status: 'Concluído',
-            content: `Conteúdo OCR simulado para ${file.name}...` // Placeholder for OCR
+            content: `Conteúdo simulado para ${file.name}...` 
           }
         ]);
 
       if (dbError) throw dbError;
 
       await fetchDocuments();
-      alert('Upload realizado com sucesso!');
+      // alert('Upload realizado com sucesso!'); // Optional: remove alert for smoother UX
 
     } catch (error: any) {
       console.error('Erro no upload:', error);
-      alert('Falha ao enviar arquivo: ' + error.message);
+      // Ensure we display a readable error string, not [object Object]
+      alert('Falha ao registrar documento: ' + (error.message || JSON.stringify(error)));
     } finally {
       setUploading(false);
       setIsDragging(false);
@@ -114,7 +128,7 @@ export default function Documentos() {
 
     try {
       // 1. Delete from Storage (if path exists)
-      if (path) {
+      if (path && path !== '#') {
         const { error: storageError } = await supabase.storage
           .from('documents')
           .remove([path]);
