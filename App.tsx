@@ -7,6 +7,7 @@ import Documentos from './pages/Documentos';
 import Servicos from './pages/Servicos';
 import Usuarios from './pages/Usuarios';
 import Login from './pages/Login';
+import Cadastro from './pages/Cadastro';
 
 const SidebarItem = ({ to, icon, label, active, onClick }: { to: string; icon: string; label: string; active: boolean; onClick?: () => void }) => (
   <Link
@@ -136,6 +137,7 @@ export default function App() {
     <HashRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/cadastro" element={<Cadastro />} />
         <Route path="/" element={<Layout><Dashboard /></Layout>} />
         <Route path="/atendimentos" element={<Layout><Atendimentos /></Layout>} />
         <Route path="/financeiro" element={<Layout><Financeiro /></Layout>} />

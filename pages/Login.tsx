@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
@@ -22,8 +21,7 @@ export default function Login() {
         throw new Error('Por favor, preencha todos os campos.');
       }
 
-      // 1. Verificar se o usuário existe na tabela app_users
-      // Usamos maybeSingle() para retornar null se não existir, em vez de erro
+      // 1. Verificar se o usuário existe na tabela app_users e buscar senha
       const { data: user, error: dbError } = await supabase
         .from('app_users')
         .select('*')
@@ -42,16 +40,16 @@ export default function Login() {
         return;
       }
 
+      // 2. Verificar senha (simulação simples, em produção usaríamos auth.signInWithPassword ou hash)
+      // Se a coluna password existir no banco, verificamos. Se não (legado), permitimos (ou falhamos seguro).
+      if (user.password && user.password !== password) {
+        throw new Error('Senha incorreta.');
+      }
+
       // Verificar status do usuário
       if (user.status !== 'Ativo') {
         throw new Error('Este usuário está inativo. Contate o administrador.');
       }
-
-      // 2. Simulação de verificação de senha
-      // Como a tabela app_users criada anteriormente não tem campo de senha (hash),
-      // e estamos simulando o acesso baseado na existência do cadastro (controle de acesso),
-      // neste ponto o login é permitido se o email existir na tabela de permissões.
-      // Em produção real, você usaria supabase.auth.signInWithPassword() aqui.
 
       // Login bem-sucedido
       localStorage.setItem('user', JSON.stringify(user));
@@ -151,7 +149,7 @@ export default function Login() {
           </div>
           
           <p className="text-center text-sm text-slate-500 mt-4">
-             Não tem uma conta? <button onClick={() => setShowRegisterModal(true)} className="text-primary font-bold hover:underline">Cadastre-se</button>
+             Não tem uma conta? <button onClick={() => navigate('/cadastro')} className="text-primary font-bold hover:underline">Cadastre-se</button>
           </p>
         </div>
         
@@ -174,7 +172,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* MODAL DE USUÁRIO NÃO ENCONTRADO / CADASTRO */}
+      {/* MODAL DE USUÁRIO NÃO ENCONTRADO */}
       {showRegisterModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all scale-100 flex flex-col items-center text-center">
@@ -190,13 +188,12 @@ export default function Login() {
             <div className="w-full flex flex-col gap-3">
               <button 
                 onClick={() => {
-                    // Aqui você redirecionaria para uma página de cadastro real se houvesse
-                    alert("Por favor, solicite seu cadastro ao administrador do sistema.");
+                    navigate('/cadastro');
                     setShowRegisterModal(false);
                 }}
                 className="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-primary/90 transition-colors"
               >
-                Solicitar Cadastro
+                Fazer Cadastro Agora
               </button>
               <button 
                 onClick={() => setShowRegisterModal(false)}

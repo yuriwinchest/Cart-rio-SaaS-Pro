@@ -3,6 +3,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  password?: string; // Added for login simulation
   role: 'Administrador' | 'Atendente' | 'Financeiro';
   status: 'Ativo' | 'Inativo';
   createdAt?: string; // Mapped from created_at
