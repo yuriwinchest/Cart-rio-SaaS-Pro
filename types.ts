@@ -15,9 +15,12 @@ export interface Document {
   service: string;
   uploadDate?: string; // Mapped from created_at
   status: 'Concluído' | 'Pendente' | 'Processando';
-  type: 'pdf' | 'docx' | 'jpg';
+  // Added 'doc' and 'jpeg' to support legacy formats and alternate extensions checked in Documentos.tsx
+  type: 'pdf' | 'docx' | 'doc' | 'jpg' | 'jpeg' | 'png' | 'other';
   size?: string;
   content?: string;
+  url?: string;  // Public URL from storage
+  path?: string; // Internal path in storage bucket
 }
 
 export interface Transaction {

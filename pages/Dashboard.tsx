@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
@@ -58,9 +59,9 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Bar Chart */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200">
+        <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 min-w-0">
            <h3 className="font-bold text-lg text-slate-800 mb-6">Atendimentos da Semana</h3>
-           <div className="h-64 sm:h-72 w-full">
+           <div className="h-64 sm:h-72 w-full min-w-0">
              <ResponsiveContainer width="100%" height="100%">
                <BarChart data={data}>
                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
@@ -76,7 +77,7 @@ export default function Dashboard() {
         </div>
 
         {/* Donut Chart */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col">
+        <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col min-w-0">
             <h3 className="font-bold text-lg text-slate-800 mb-6">Status de Serviços</h3>
             <div className="flex-1 flex items-center justify-center relative min-h-[200px]">
                <div className="absolute inset-0 flex items-center justify-center flex-col">
@@ -84,21 +85,20 @@ export default function Dashboard() {
                   <span className="text-xs text-slate-500">Total</span>
                </div>
                <div className="w-48 h-48">
-                 <ResponsiveContainer width="100%" height="100%">
-                   <PieChart>
-                     <Pie
-                       data={pieData}
-                       innerRadius={60}
-                       outerRadius={80}
-                       paddingAngle={5}
-                       dataKey="value"
-                     >
-                       {pieData.map((entry, index) => (
-                         <Cell key={`cell-${index}`} fill={entry.color} />
-                       ))}
-                     </Pie>
-                   </PieChart>
-                 </ResponsiveContainer>
+                 {/* Fixed dimensions to prevent responsive container errors in restricted flex layouts */}
+                 <PieChart width={192} height={192}>
+                   <Pie
+                     data={pieData}
+                     innerRadius={60}
+                     outerRadius={80}
+                     paddingAngle={5}
+                     dataKey="value"
+                   >
+                     {pieData.map((entry, index) => (
+                       <Cell key={`cell-${index}`} fill={entry.color} />
+                     ))}
+                   </Pie>
+                 </PieChart>
                </div>
             </div>
             <div className="space-y-3 mt-4">

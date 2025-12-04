@@ -10,29 +10,152 @@ export default function Documentos() {
   const [statusFilter, setStatusFilter] = useState('Todos');
   const [typeFilter, setTypeFilter] = useState('Todos');
   const [loading, setLoading] = useState(true);
+  
+  // Upload State
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    const fetchDocuments = async () => {
-      setLoading(true);
-      const { data, error } = await supabase.from('documents').select('*');
-      if (!error && data) {
-        const mappedDocs: Document[] = data.map((d: any) => ({
-          id: d.id,
-          name: d.name,
-          client: d.client,
-          service: d.service,
-          uploadDate: new Date(d.created_at).toLocaleDateString('pt-BR'),
-          status: d.status,
-          type: d.type,
-          content: d.content
-        }));
-        setDocs(mappedDocs);
-      }
-      setLoading(false);
-    };
     fetchDocuments();
   }, []);
 
+  const fetchDocuments = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        const mappedDocs: Document[] = data.map((d: any) => ({
+          id: d.id,
+          name: d.name,
+          client: d.client || 'Cliente Desconhecido',
+          service: d.service || 'Geral',
+          uploadDate: new Date(d.created_at).toLocaleDateString('pt-BR'),
+          status: d.status,
+          type: d.type,
+          content: d.content,
+          size: d.size,
+          url: d.url,
+          path: d.path
+        }));
+        setDocs(mappedDocs);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar documentos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- UPLOAD LOGIC ---
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+
+    try {
+      const file = files[0];
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'other';
+      const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+      const filePath = `${fileName}`;
+
+      // 1. Upload to Supabase Storage
+      const { data: storageData, error: storageError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file);
+
+      if (storageError) throw storageError;
+
+      // 2. Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+
+      // 3. Insert into Database
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+      
+      const { error: dbError } = await supabase
+        .from('documents')
+        .insert([
+          {
+            name: file.name,
+            client: 'Cliente Exemplo', // In a real app, this would come from a modal/form
+            service: 'Upload Manual',
+            type: fileExt,
+            size: fileSizeMB,
+            url: publicUrl,
+            path: filePath,
+            status: 'Concluído',
+            content: `Conteúdo OCR simulado para ${file.name}...` // Placeholder for OCR
+          }
+        ]);
+
+      if (dbError) throw dbError;
+
+      await fetchDocuments();
+      alert('Upload realizado com sucesso!');
+
+    } catch (error: any) {
+      console.error('Erro no upload:', error);
+      alert('Falha ao enviar arquivo: ' + error.message);
+    } finally {
+      setUploading(false);
+      setIsDragging(false);
+    }
+  };
+
+  // --- DELETE LOGIC ---
+  const handleDelete = async (id: string, path?: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir este documento?')) return;
+
+    try {
+      // 1. Delete from Storage (if path exists)
+      if (path) {
+        const { error: storageError } = await supabase.storage
+          .from('documents')
+          .remove([path]);
+        
+        if (storageError) console.warn('Erro ao deletar arquivo do storage:', storageError);
+      }
+
+      // 2. Delete from Database
+      const { error: dbError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', id);
+
+      if (dbError) throw dbError;
+
+      setDocs(prev => prev.filter(d => d.id !== id));
+
+    } catch (error) {
+      console.error('Erro ao excluir:', error);
+      alert('Erro ao excluir documento.');
+    }
+  };
+
+  // --- DRAG AND DROP HANDLERS ---
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const onDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFileUpload(e.dataTransfer.files);
+  };
+
+  // --- FILTER LOGIC ---
   const filteredDocs = docs.filter(doc => {
     const term = searchTerm.toLowerCase();
     const matchesSearch = 
@@ -42,7 +165,12 @@ export default function Documentos() {
       (doc.content && doc.content.toLowerCase().includes(term));
     
     const matchesStatus = statusFilter === 'Todos' || doc.status === statusFilter;
-    const matchesType = typeFilter === 'Todos' || doc.type === typeFilter;
+    
+    // Simple extension check for type filter
+    const matchesType = typeFilter === 'Todos' || 
+                        (typeFilter === 'pdf' && doc.type === 'pdf') ||
+                        (typeFilter === 'docx' && (doc.type === 'docx' || doc.type === 'doc')) ||
+                        (typeFilter === 'jpg' && (doc.type === 'jpg' || doc.type === 'jpeg' || doc.type === 'png'));
 
     return matchesSearch && matchesStatus && matchesType;
   });
@@ -57,6 +185,13 @@ export default function Documentos() {
     return (start > 0 ? "..." : "") + text.substring(start, end) + (end < text.length ? "..." : "");
   };
 
+  const getFileIcon = (type: string) => {
+    if (['pdf'].includes(type)) return <span className="material-symbols-outlined text-red-500 text-3xl">picture_as_pdf</span>;
+    if (['doc', 'docx'].includes(type)) return <span className="material-symbols-outlined text-blue-500 text-3xl">description</span>;
+    if (['jpg', 'jpeg', 'png'].includes(type)) return <span className="material-symbols-outlined text-green-500 text-3xl">image</span>;
+    return <span className="material-symbols-outlined text-slate-400 text-3xl">insert_drive_file</span>;
+  };
+
   return (
     <div className="h-full flex flex-col">
        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -65,12 +200,20 @@ export default function Documentos() {
             <p className="text-slate-500">Faça upload, organize e busque seus documentos.</p>
          </div>
          <div className="flex gap-2 w-full md:w-auto">
-            <button className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-primary/30 text-primary font-bold text-sm px-4 py-2 rounded-lg hover:bg-primary/5">
-                <span className="material-symbols-outlined">create_new_folder</span> Create
-            </button>
-            <button className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-primary text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-primary/90">
-                <span className="material-symbols-outlined">upload_file</span> Upload
-            </button>
+            <label className={`flex-1 md:flex-none flex items-center justify-center gap-2 bg-primary text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-primary/90 cursor-pointer transition-all ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                {uploading ? (
+                  <span className="material-symbols-outlined animate-spin">refresh</span>
+                ) : (
+                  <span className="material-symbols-outlined">upload_file</span>
+                )}
+                {uploading ? 'Enviando...' : 'Upload'}
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  onChange={(e) => handleFileUpload(e.target.files)} 
+                  disabled={uploading}
+                />
+            </label>
          </div>
        </div>
 
@@ -127,14 +270,6 @@ export default function Documentos() {
           </div>
        </div>
 
-       {/* Tags/Filters */}
-       <div className="flex gap-2 mb-6 flex-wrap">
-          <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold cursor-pointer hover:bg-blue-200">Escritura</span>
-          <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold cursor-pointer hover:bg-purple-200">Procuração</span>
-          <span className="px-3 py-1 rounded-full bg-teal-100 text-teal-700 text-xs font-bold cursor-pointer hover:bg-teal-200">Contrato Social</span>
-          <span className="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold cursor-pointer hover:bg-orange-200">Certidão</span>
-       </div>
-
        {/* Content */}
        <div className="flex-1 bg-white rounded-xl border border-slate-200 p-4 md:p-6 overflow-hidden flex flex-col">
           {loading ? (
@@ -144,37 +279,66 @@ export default function Documentos() {
           ) : view === 'grid' ? (
              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto p-1">
                {/* Dropzone */}
-               <div className="border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center p-6 text-center text-slate-400 hover:bg-slate-50 transition-colors cursor-pointer min-h-[180px]">
-                  <span className="material-symbols-outlined text-4xl mb-2">cloud_upload</span>
-                  <p className="text-sm font-medium">Clique ou arraste arquivos</p>
-                  <p className="text-xs mt-1">PDF, JPG, DOCX (Max 50MB)</p>
+               <div 
+                  onDragOver={onDragOver}
+                  onDragLeave={onDragLeave}
+                  onDrop={onDrop}
+                  className={`border-2 border-dashed rounded-xl flex flex-col items-center justify-center p-6 text-center transition-all cursor-pointer min-h-[220px] ${
+                    isDragging ? 'border-primary bg-primary/5' : 'border-slate-300 hover:bg-slate-50'
+                  }`}
+               >
+                  {uploading ? (
+                    <div className="flex flex-col items-center">
+                       <span className="material-symbols-outlined text-4xl mb-2 text-primary animate-spin">refresh</span>
+                       <p className="text-sm font-bold text-primary">Enviando...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <span className={`material-symbols-outlined text-4xl mb-2 ${isDragging ? 'text-primary' : 'text-slate-400'}`}>cloud_upload</span>
+                      <p className="text-sm font-medium text-slate-600">Arraste e solte arquivos</p>
+                      <p className="text-xs mt-1 text-slate-400">PDF, JPG, DOCX (Max 50MB)</p>
+                      <label className="mt-3 text-xs bg-white border border-slate-300 px-3 py-1.5 rounded-lg shadow-sm cursor-pointer hover:bg-slate-50 font-medium">
+                         Selecionar Arquivo
+                         <input type="file" className="hidden" onChange={(e) => handleFileUpload(e.target.files)} />
+                      </label>
+                    </>
+                  )}
                </div>
 
                {filteredDocs.map(doc => {
                  const contentSnippet = getSnippet(doc.content, searchTerm);
                  return (
-                   <div key={doc.id} className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow group relative flex flex-col">
+                   <div key={doc.id} className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow group relative flex flex-col h-[220px]">
                       <div className="flex justify-between items-start mb-3">
-                         {doc.type === 'pdf' && <span className="material-symbols-outlined text-red-500 text-3xl">picture_as_pdf</span>}
-                         {doc.type === 'docx' && <span className="material-symbols-outlined text-blue-500 text-3xl">description</span>}
-                         {doc.type === 'jpg' && <span className="material-symbols-outlined text-green-500 text-3xl">image</span>}
-                         <button className="text-slate-300 hover:text-slate-600"><span className="material-symbols-outlined">more_vert</span></button>
+                         {getFileIcon(doc.type)}
+                         <div className="relative group/menu">
+                            <button className="text-slate-300 hover:text-slate-600"><span className="material-symbols-outlined">more_vert</span></button>
+                            {/* Simple Dropdown for Grid */}
+                            <div className="absolute right-0 top-6 w-32 bg-white border border-slate-200 rounded-lg shadow-lg hidden group-hover/menu:block z-10">
+                               <a href={doc.url} target="_blank" rel="noopener noreferrer" className="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">Baixar</a>
+                               <button onClick={() => handleDelete(doc.id, doc.path)} className="block w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50">Excluir</button>
+                            </div>
+                         </div>
                       </div>
                       <h4 className="font-bold text-slate-800 text-sm mb-1 truncate" title={doc.name}>{doc.name}</h4>
-                      <p className="text-xs text-slate-500 mb-2">Modificado: {doc.uploadDate}</p>
+                      <p className="text-xs text-slate-500 mb-2">Cliente: {doc.client}</p>
                       
-                      {contentSnippet && (
-                        <div className="mb-4 p-2 bg-yellow-50 border border-yellow-100 rounded text-[11px] text-slate-600 italic leading-snug">
+                      {contentSnippet ? (
+                        <div className="flex-1 mb-2 p-2 bg-yellow-50 border border-yellow-100 rounded text-[10px] text-slate-600 italic leading-snug overflow-hidden">
                            "{contentSnippet}"
                         </div>
+                      ) : (
+                        <div className="flex-1"></div>
                       )}
                       
-                      <div className="mt-auto flex justify-between items-center">
+                      <div className="mt-auto flex justify-between items-center pt-2 border-t border-slate-100">
                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                             doc.status === 'Concluído' ? 'bg-green-100 text-green-700' :
                             doc.status === 'Processando' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
                          }`}>{doc.status}</span>
-                         <span className="material-symbols-outlined text-slate-400 text-lg hover:text-primary cursor-pointer">visibility</span>
+                         <a href={doc.url} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-primary" title="Visualizar">
+                            <span className="material-symbols-outlined text-lg">visibility</span>
+                         </a>
                       </div>
                    </div>
                  );
@@ -185,11 +349,10 @@ export default function Documentos() {
                <table className="w-full text-left text-sm whitespace-nowrap">
                   <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
                      <tr>
-                        <th className="px-4 py-3"><input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary" /></th>
                         <th className="px-4 py-3">Documento</th>
                         <th className="px-4 py-3">Cliente</th>
-                        <th className="px-4 py-3">Serviço</th>
                         <th className="px-4 py-3">Data</th>
+                        <th className="px-4 py-3">Tamanho</th>
                         <th className="px-4 py-3">Status</th>
                         <th className="px-4 py-3 text-right">Ações</th>
                      </tr>
@@ -197,11 +360,8 @@ export default function Documentos() {
                   <tbody className="divide-y divide-slate-100">
                      {filteredDocs.map(doc => (
                         <tr key={doc.id} className="hover:bg-slate-50">
-                           <td className="px-4 py-3"><input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary" /></td>
                            <td className="px-4 py-3 font-medium text-slate-900 flex items-center gap-2">
-                              {doc.type === 'pdf' && <span className="material-symbols-outlined text-red-500 text-lg">picture_as_pdf</span>}
-                              {doc.type === 'docx' && <span className="material-symbols-outlined text-blue-500 text-lg">description</span>}
-                              {doc.type === 'jpg' && <span className="material-symbols-outlined text-green-500 text-lg">image</span>}
+                              {getFileIcon(doc.type)}
                               <div className="flex flex-col">
                                  <span>{doc.name}</span>
                                  {getSnippet(doc.content, searchTerm) && (
@@ -212,8 +372,8 @@ export default function Documentos() {
                               </div>
                            </td>
                            <td className="px-4 py-3 text-slate-600">{doc.client}</td>
-                           <td className="px-4 py-3 text-slate-600">{doc.service}</td>
                            <td className="px-4 py-3 text-slate-500">{doc.uploadDate}</td>
+                           <td className="px-4 py-3 text-slate-500 text-xs">{doc.size || '-'}</td>
                            <td className="px-4 py-3">
                               <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                                   doc.status === 'Concluído' ? 'bg-green-100 text-green-700' :
@@ -222,9 +382,9 @@ export default function Documentos() {
                            </td>
                            <td className="px-4 py-3 text-right">
                               <div className="flex items-center justify-end gap-2 text-slate-400">
-                                 <button className="hover:text-primary"><span className="material-symbols-outlined text-lg">visibility</span></button>
-                                 <button className="hover:text-primary"><span className="material-symbols-outlined text-lg">download</span></button>
-                                 <button className="hover:text-red-500"><span className="material-symbols-outlined text-lg">delete</span></button>
+                                 <a href={doc.url} target="_blank" rel="noreferrer" className="hover:text-primary" title="Visualizar"><span className="material-symbols-outlined text-lg">visibility</span></a>
+                                 <a href={doc.url} download className="hover:text-primary" title="Baixar"><span className="material-symbols-outlined text-lg">download</span></a>
+                                 <button onClick={() => handleDelete(doc.id, doc.path)} className="hover:text-red-500" title="Excluir"><span className="material-symbols-outlined text-lg">delete</span></button>
                               </div>
                            </td>
                         </tr>
