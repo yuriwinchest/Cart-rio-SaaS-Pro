@@ -79,6 +79,7 @@ export default function Atendimentos() {
   const location = useLocation();
   const [queue, setQueue] = useState<QueueItem[]>(initialQueueData);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [serviceFilter, setServiceFilter] = useState('Todos');
   
   // Check for navigation state to open modal automatically
   useEffect(() => {
@@ -93,6 +94,10 @@ export default function Atendimentos() {
   const [clientName, setClientName] = useState('');
   const [selectedService, setSelectedService] = useState(availableServices[0]);
   const [isPriority, setIsPriority] = useState(false);
+
+  const filteredQueue = queue.filter(item => 
+    serviceFilter === 'Todos' || item.service === serviceFilter
+  );
 
   const handleAddNew = (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,9 +149,29 @@ export default function Atendimentos() {
         </nav>
       </div>
 
+      {/* Filter Toolbar */}
+      <div className="flex justify-end mb-6">
+        <div className="flex items-center gap-2">
+          <label htmlFor="service-filter" className="text-sm font-medium text-slate-500 hidden sm:block">Filtrar por:</label>
+          <select
+            id="service-filter"
+            value={serviceFilter}
+            onChange={(e) => setServiceFilter(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm cursor-pointer"
+          >
+            <option value="Todos">Todos os Serviços</option>
+            {availableServices.map((service) => (
+              <option key={service} value={service}>
+                {service}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {/* Render Cards */}
-        {queue.map(item => (
+        {filteredQueue.map(item => (
           <QueueCard key={item.id} item={item} />
         ))}
 

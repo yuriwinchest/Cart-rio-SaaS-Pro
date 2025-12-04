@@ -27,6 +27,8 @@ export interface Transaction {
   type: 'Receita' | 'Despesa';
   method: 'PIX' | 'Boleto' | 'Dinheiro' | 'Cartão' | 'Cartão de Débito';
   amount: number;
+  notes?: string;
+  items?: { description: string; quantity: number; unitPrice: number }[];
 }
 
 export interface Service {
