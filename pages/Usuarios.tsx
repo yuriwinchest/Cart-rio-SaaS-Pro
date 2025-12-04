@@ -11,39 +11,39 @@ const users: User[] = [
 export default function Usuarios() {
   return (
     <div>
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
         <div>
            <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
               <span>Administração</span> <span className="material-symbols-outlined text-xs">chevron_right</span> <span className="text-slate-900 font-medium">Usuários</span>
            </div>
-           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Controle de Usuários e Permissões</h1>
-           <p className="text-slate-500 mt-1">Gerencie o acesso e as ações de cada colaborador no sistema.</p>
+           <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Controle de Usuários e Permissões</h1>
+           <p className="text-slate-500 mt-1 text-sm md:text-base">Gerencie o acesso e as ações de cada colaborador no sistema.</p>
         </div>
-        <button className="bg-primary text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2">
+        <button className="w-full md:w-auto bg-primary text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center justify-center gap-2">
            <span className="material-symbols-outlined text-lg">add</span> Adicionar Novo Usuário
         </button>
       </div>
 
-      <div className="mb-6 border-b border-slate-200">
-         <nav className="flex gap-6 text-sm font-medium">
-            <button className="border-b-2 border-primary text-primary pb-3">Usuários</button>
-            <button className="border-b-2 border-transparent text-slate-500 pb-3 hover:text-slate-800">Perfis de Permissão</button>
-            <button className="border-b-2 border-transparent text-slate-500 pb-3 hover:text-slate-800">Log de Auditoria</button>
+      <div className="mb-6 border-b border-slate-200 overflow-x-auto">
+         <nav className="flex gap-6 text-sm font-medium min-w-max">
+            <button className="border-b-2 border-primary text-primary pb-3 whitespace-nowrap">Usuários</button>
+            <button className="border-b-2 border-transparent text-slate-500 pb-3 hover:text-slate-800 whitespace-nowrap">Perfis de Permissão</button>
+            <button className="border-b-2 border-transparent text-slate-500 pb-3 hover:text-slate-800 whitespace-nowrap">Log de Auditoria</button>
          </nav>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
          <div className="p-4 bg-slate-50/50 border-b border-slate-200 flex flex-col md:flex-row gap-4 justify-between items-center">
-            <div className="relative w-full md:w-96">
+            <div className="relative w-full md:max-w-md">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
                 <input type="text" placeholder="Buscar por nome, e-mail ou perfil..." className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-primary focus:border-primary outline-none" />
             </div>
-            <div className="flex gap-3 w-full md:w-auto">
-               <select className="flex-1 md:w-40 border border-slate-200 rounded-lg text-sm px-3 py-2 outline-none bg-white">
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+               <select className="w-full sm:w-40 border border-slate-200 rounded-lg text-sm px-3 py-2 outline-none bg-white">
                   <option>Perfil de Permissão</option>
                   <option>Todos</option>
                </select>
-               <select className="flex-1 md:w-32 border border-slate-200 rounded-lg text-sm px-3 py-2 outline-none bg-white">
+               <select className="w-full sm:w-32 border border-slate-200 rounded-lg text-sm px-3 py-2 outline-none bg-white">
                   <option>Status</option>
                   <option>Todos</option>
                </select>
@@ -51,7 +51,7 @@ export default function Usuarios() {
          </div>
 
          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm whitespace-nowrap">
                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase text-xs tracking-wider">
                   <tr>
                      <th className="px-6 py-4 w-10"><input type="checkbox" className="rounded border-slate-300 text-primary" /></th>
@@ -91,8 +91,8 @@ export default function Usuarios() {
             </table>
          </div>
 
-         <div className="p-4 border-t border-slate-200 flex justify-between items-center bg-slate-50/50">
-            <span className="text-xs text-slate-500">Mostrando <span className="font-bold text-slate-900">1-4</span> de <span className="font-bold text-slate-900">10</span></span>
+         <div className="p-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center bg-slate-50/50 gap-4">
+            <span className="text-xs text-slate-500 text-center sm:text-left">Mostrando <span className="font-bold text-slate-900">1-4</span> de <span className="font-bold text-slate-900">10</span></span>
             <div className="flex gap-1">
                <button className="p-2 border border-slate-200 bg-white rounded hover:bg-slate-50 disabled:opacity-50"><span className="material-symbols-outlined text-sm">chevron_left</span></button>
                <button className="w-8 h-8 flex items-center justify-center border border-primary bg-primary/10 text-primary font-bold rounded text-xs">1</button>

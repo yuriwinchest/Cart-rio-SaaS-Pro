@@ -24,17 +24,17 @@ const QueueCard: React.FC<{ item: QueueItem }> = ({ item }) => {
   const isRemote = item.status === 'Remoto';
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm flex flex-col transition-all hover:shadow-md">
-      <div className="p-5 flex-1">
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm flex flex-col transition-all hover:shadow-md h-full">
+      <div className="p-5 flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-4">
-           <div>
-             <h3 className="font-bold text-lg text-slate-900 line-clamp-1" title={item.name}>{item.name}</h3>
-             <p className="text-sm text-slate-500">{item.service}</p>
+           <div className="flex-1 min-w-0 pr-2">
+             <h3 className="font-bold text-lg text-slate-900 truncate" title={item.name}>{item.name}</h3>
+             <p className="text-sm text-slate-500 truncate">{item.service}</p>
            </div>
-           <span className={`text-2xl font-black ${isServing ? 'text-primary' : 'text-slate-300'}`}>{item.ticketNumber}</span>
+           <span className={`text-2xl font-black shrink-0 ${isServing ? 'text-primary' : 'text-slate-300'}`}>{item.ticketNumber}</span>
         </div>
         
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
           {isServing && (
              <span className="bg-amber-100 text-amber-700 text-xs font-bold px-2.5 py-0.5 rounded-full">Em Atendimento</span>
           )}
@@ -48,9 +48,9 @@ const QueueCard: React.FC<{ item: QueueItem }> = ({ item }) => {
           )}
         </div>
         
-        <div className="flex justify-between items-center text-sm text-slate-500">
+        <div className="flex justify-between items-center text-sm text-slate-500 mt-auto pt-2">
            {isServing && <span className="font-medium text-slate-700">{item.desk}</span>}
-           <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">schedule</span> {item.waitTime}</span>
+           <span className="flex items-center gap-1 ml-auto"><span className="material-symbols-outlined text-[16px]">schedule</span> {item.waitTime}</span>
         </div>
       </div>
 
@@ -122,25 +122,25 @@ export default function Atendimentos() {
 
   return (
     <div className="flex flex-col h-full relative">
-      <div className="flex justify-between items-end mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Gestão de Atendimentos</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Gestão de Atendimentos</h1>
           <p className="text-slate-500">Acompanhe a fila em tempo real.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="bg-primary text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2 transition-colors shadow-sm"
+          className="w-full md:w-auto bg-primary text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center justify-center gap-2 transition-colors shadow-sm"
         >
            <span className="material-symbols-outlined text-lg">add</span> Novo Atendimento
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 mb-6">
-        <nav className="flex gap-8">
-          <button className="border-b-2 border-primary pb-3 px-1 text-sm font-bold text-primary">Fila Virtual</button>
-          <button className="border-b-2 border-transparent pb-3 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 transition-all">Agendamentos</button>
-          <button className="border-b-2 border-transparent pb-3 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 transition-all">Histórico</button>
+      <div className="border-b border-slate-200 mb-6 overflow-x-auto">
+        <nav className="flex gap-8 min-w-max">
+          <button className="border-b-2 border-primary pb-3 px-1 text-sm font-bold text-primary whitespace-nowrap">Fila Virtual</button>
+          <button className="border-b-2 border-transparent pb-3 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 transition-all whitespace-nowrap">Agendamentos</button>
+          <button className="border-b-2 border-transparent pb-3 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 transition-all whitespace-nowrap">Histórico</button>
         </nav>
       </div>
 
@@ -172,7 +172,7 @@ export default function Atendimentos() {
                 <div className="w-full h-full bg-[url('https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Checkin')] bg-cover"></div>
              </div>
            </div>
-           <div className="text-center sm:text-left">
+           <div className="text-center sm:text-left flex-1">
              <h3 className="font-bold text-slate-900 text-lg">Check-in por QR Code</h3>
              <p className="text-sm text-slate-500 mt-1 mb-3">Exiba este código na recepção para os clientes realizarem o auto-atendimento.</p>
              <div className="flex gap-2 justify-center sm:justify-start">
@@ -215,7 +215,7 @@ export default function Atendimentos() {
 
       {/* NEW ATTENDANCE MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200 overflow-y-auto">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
             <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
               <h3 className="font-bold text-lg text-slate-800">Novo Atendimento</h3>

@@ -30,18 +30,18 @@ const StatCard = ({ title, value, icon, colorClass }: any) => (
 
 export default function Dashboard() {
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex justify-between items-end">
+    <div className="flex flex-col gap-6 lg:gap-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Painel Administrativo</h2>
-          <p className="text-slate-500 mt-1">Bem-vinda de volta, Ana! Aqui está o resumo de hoje.</p>
+          <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Painel Administrativo</h2>
+          <p className="text-slate-500 mt-1 text-sm md:text-base">Bem-vinda de volta, Ana! Aqui está o resumo de hoje.</p>
         </div>
-        <div className="flex gap-2">
-           <button className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50">Hoje</button>
+        <div className="flex gap-2 w-full md:w-auto">
+           <button className="flex-1 md:flex-none bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 justify-center">Hoje</button>
            <Link 
              to="/atendimentos" 
              state={{ openModal: true }}
-             className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 flex items-center gap-2"
+             className="flex-1 md:flex-none bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 flex items-center justify-center gap-2"
            >
              <span className="material-symbols-outlined text-lg">add</span> Novo Atendimento
            </Link>
@@ -49,18 +49,18 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <StatCard title="Atendimentos Hoje" value="112" icon="groups" colorClass="text-primary" />
         <StatCard title="Arrecadação do Dia" value="R$ 12.580" icon="payments" colorClass="text-green-500" />
         <StatCard title="Processos Pendentes" value="45" icon="pending_actions" colorClass="text-amber-500" />
         <StatCard title="Concluídos Hoje" value="67" icon="task_alt" colorClass="text-blue-500" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Bar Chart */}
         <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200">
            <h3 className="font-bold text-lg text-slate-800 mb-6">Atendimentos da Semana</h3>
-           <div className="h-72 w-full">
+           <div className="h-64 sm:h-72 w-full">
              <ResponsiveContainer width="100%" height="100%">
                <BarChart data={data}>
                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
@@ -78,7 +78,7 @@ export default function Dashboard() {
         {/* Donut Chart */}
         <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col">
             <h3 className="font-bold text-lg text-slate-800 mb-6">Status de Serviços</h3>
-            <div className="flex-1 flex items-center justify-center relative">
+            <div className="flex-1 flex items-center justify-center relative min-h-[200px]">
                <div className="absolute inset-0 flex items-center justify-center flex-col">
                   <span className="text-3xl font-bold text-slate-900">65</span>
                   <span className="text-xs text-slate-500">Total</span>
@@ -121,7 +121,7 @@ export default function Dashboard() {
             <h3 className="font-bold text-lg text-slate-800">Pendências Urgentes</h3>
         </div>
         <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-slate-50 text-slate-500 font-medium">
                     <tr>
                         <th className="px-6 py-3">Tarefa</th>

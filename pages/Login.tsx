@@ -5,15 +5,15 @@ export default function Login() {
   return (
     <div className="min-h-screen flex w-full">
       {/* Left Column - Form */}
-      <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center items-center p-8 lg:p-16 relative">
-        <div className="absolute top-8 left-8 flex items-center gap-2">
+      <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center items-center p-6 md:p-12 lg:p-16 relative">
+        <div className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2">
             <div className="size-8 bg-slate-900 rounded-full flex items-center justify-center">
                  <span className="material-symbols-outlined text-white text-lg">gavel</span>
             </div>
             <span className="font-bold text-slate-900">Cartório Digital</span>
         </div>
 
-        <div className="w-full max-w-sm flex flex-col gap-6">
+        <div className="w-full max-w-sm flex flex-col gap-6 mt-12 md:mt-0">
           <div>
             <h1 className="text-3xl font-black text-slate-900 mb-2">Acesse o Portal</h1>
             <p className="text-slate-500">Entre com seus dados para gerenciar o cartório ou acessar serviços.</p>
@@ -71,7 +71,7 @@ export default function Login() {
           </p>
         </div>
         
-        <div className="absolute bottom-8 text-center text-xs text-slate-400 w-full">
+        <div className="absolute bottom-4 md:bottom-8 text-center text-xs text-slate-400 w-full">
            © 2024 Cartório SaaS. Todos os direitos reservados.
         </div>
       </div>

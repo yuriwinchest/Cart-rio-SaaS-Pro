@@ -10,49 +10,52 @@ const services: Service[] = [
 
 export default function Servicos() {
   return (
-    <div className="flex h-full gap-6">
-       {/* Inner Sidebar for Filters (Img 9 style) */}
-       <div className="w-64 flex-shrink-0 hidden lg:block">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Atribuições</h3>
-          <div className="space-y-1">
+    <div className="flex flex-col lg:flex-row h-full gap-6">
+       {/* Filters Sidebar - Responsive */}
+       <div className="w-full lg:w-64 flex-shrink-0">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 hidden lg:block">Atribuições</h3>
+          
+          {/* Mobile dropdown / Desktop list */}
+          <div className="lg:space-y-1 grid grid-cols-2 gap-2 lg:block">
              <button className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium">
-                <span className="material-symbols-outlined text-lg fill">description</span> Tabelionato de Notas
+                <span className="material-symbols-outlined text-lg fill">description</span> <span className="truncate">Tabelionato</span>
              </button>
              <button className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100">
-                <span className="material-symbols-outlined text-lg">group</span> Registro Civil
+                <span className="material-symbols-outlined text-lg">group</span> <span className="truncate">Reg. Civil</span>
              </button>
              <button className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100">
-                <span className="material-symbols-outlined text-lg">home</span> Registro de Imóveis
+                <span className="material-symbols-outlined text-lg">home</span> <span className="truncate">Reg. Imóveis</span>
              </button>
              <button className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100">
-                <span className="material-symbols-outlined text-lg">assignment</span> Títulos e Documentos
+                <span className="material-symbols-outlined text-lg">assignment</span> <span className="truncate">Títulos</span>
              </button>
              <button className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100">
-                <span className="material-symbols-outlined text-lg">warning</span> Protesto
+                <span className="material-symbols-outlined text-lg">warning</span> <span className="truncate">Protesto</span>
              </button>
           </div>
-          <button className="mt-4 w-full border border-primary text-primary font-bold text-sm py-2 rounded-lg hover:bg-primary/5">
+          
+          <button className="mt-4 w-full border border-primary text-primary font-bold text-sm py-2 rounded-lg hover:bg-primary/5 hidden lg:block">
              Adicionar Atribuição
           </button>
        </div>
 
        {/* Main Table Area */}
        <div className="flex-1 flex flex-col">
-          <div className="flex justify-between items-center mb-6">
-             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Serviços e Atos</h1>
-             <button className="bg-primary text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+             <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Serviços e Atos</h1>
+             <button className="w-full sm:w-auto bg-primary text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center justify-center gap-2">
                 <span className="material-symbols-outlined text-lg">add_circle</span> Novo Serviço/Ato
              </button>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden flex-1 flex flex-col">
-             <div className="p-4 border-b border-slate-200 flex gap-4">
+             <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1 max-w-md">
                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
                    <input type="text" placeholder="Buscar por nome do serviço ou ato..." className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-primary focus:border-primary outline-none" />
                 </div>
-                <div className="ml-auto flex gap-2">
-                   <select className="border border-slate-200 rounded-lg text-sm text-slate-600 px-3 py-2 outline-none">
+                <div className="flex gap-2 w-full sm:w-auto">
+                   <select className="flex-1 border border-slate-200 rounded-lg text-sm text-slate-600 px-3 py-2 outline-none">
                       <option>Filtrar por Atribuição</option>
                       <option>Todas</option>
                    </select>
@@ -61,7 +64,7 @@ export default function Servicos() {
              </div>
 
              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
+                <table className="w-full text-left text-sm whitespace-nowrap">
                    <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
                       <tr>
                          <th className="px-6 py-3">Nome do Serviço/Ato</th>

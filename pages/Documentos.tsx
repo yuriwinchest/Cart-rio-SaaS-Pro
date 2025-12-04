@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Document } from '../types';
 
@@ -71,17 +70,17 @@ export default function Documentos() {
 
   return (
     <div className="h-full flex flex-col">
-       <div className="flex justify-between items-start mb-6">
+       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
          <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Gerenciamento de Documentos</h1>
+            <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Gerenciamento de Documentos</h1>
             <p className="text-slate-500">Faça upload, organize e busque seus documentos.</p>
          </div>
-         <div className="flex gap-2">
-            <button className="flex items-center gap-2 bg-white border border-primary/30 text-primary font-bold text-sm px-4 py-2 rounded-lg hover:bg-primary/5">
-                <span className="material-symbols-outlined">create_new_folder</span> Criar Pasta
+         <div className="flex gap-2 w-full md:w-auto">
+            <button className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-primary/30 text-primary font-bold text-sm px-4 py-2 rounded-lg hover:bg-primary/5">
+                <span className="material-symbols-outlined">create_new_folder</span> Create
             </button>
-            <button className="flex items-center gap-2 bg-primary text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-primary/90">
-                <span className="material-symbols-outlined">upload_file</span> Fazer Upload
+            <button className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-primary text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-primary/90">
+                <span className="material-symbols-outlined">upload_file</span> Upload
             </button>
          </div>
        </div>
@@ -98,34 +97,36 @@ export default function Documentos() {
                 onChange={(e) => setSearchTerm(e.target.value)}
              />
           </div>
-          <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-             <button 
-                onClick={() => setView('list')}
-                className={`p-2 rounded-md transition-colors ${view === 'list' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
-             >
-                <span className="material-symbols-outlined">view_list</span>
-             </button>
-             <button 
-                onClick={() => setView('grid')}
-                className={`p-2 rounded-md transition-colors ${view === 'grid' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
-             >
-                <span className="material-symbols-outlined">grid_view</span>
-             </button>
+          <div className="flex items-center justify-end gap-2">
+             <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+                <button 
+                   onClick={() => setView('list')}
+                   className={`p-2 rounded-md transition-colors ${view === 'list' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                   <span className="material-symbols-outlined">view_list</span>
+                </button>
+                <button 
+                   onClick={() => setView('grid')}
+                   className={`p-2 rounded-md transition-colors ${view === 'grid' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                   <span className="material-symbols-outlined">grid_view</span>
+                </button>
+             </div>
           </div>
        </div>
 
        {/* Tags/Filters */}
        <div className="flex gap-2 mb-6 flex-wrap">
-          <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold cursor-pointer">Escritura</span>
-          <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold cursor-pointer">Procuração</span>
-          <span className="px-3 py-1 rounded-full bg-teal-100 text-teal-700 text-xs font-bold cursor-pointer">Contrato Social</span>
-          <span className="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold cursor-pointer">Certidão</span>
+          <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold cursor-pointer hover:bg-blue-200">Escritura</span>
+          <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold cursor-pointer hover:bg-purple-200">Procuração</span>
+          <span className="px-3 py-1 rounded-full bg-teal-100 text-teal-700 text-xs font-bold cursor-pointer hover:bg-teal-200">Contrato Social</span>
+          <span className="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold cursor-pointer hover:bg-orange-200">Certidão</span>
        </div>
 
        {/* Content */}
-       <div className="flex-1 bg-white rounded-xl border border-slate-200 p-6 overflow-hidden flex flex-col">
+       <div className="flex-1 bg-white rounded-xl border border-slate-200 p-4 md:p-6 overflow-hidden flex flex-col">
           {view === 'grid' && (
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto">
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto p-1">
                {/* Dropzone */}
                <div className="border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center p-6 text-center text-slate-400 hover:bg-slate-50 transition-colors cursor-pointer min-h-[180px]">
                   <span className="material-symbols-outlined text-4xl mb-2">cloud_upload</span>
@@ -164,7 +165,7 @@ export default function Documentos() {
 
           {view === 'list' && (
             <div className="overflow-x-auto">
-               <table className="w-full text-left text-sm">
+               <table className="w-full text-left text-sm whitespace-nowrap">
                   <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
                      <tr>
                         <th className="px-4 py-3"><input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary" /></th>
